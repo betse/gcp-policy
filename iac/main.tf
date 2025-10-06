@@ -6,7 +6,7 @@ provider "google" {
 # Enforce (or adjust) the Organization Policy
 resource "google_project_organization_policy" "block_public_ips" {
   project    = var.project_id
-  constraint = var.constraint
+  constraint = "compute.vmExternalIpAccess"
 
   list_policy {
     # To enforce (block all): deny { all = true }
