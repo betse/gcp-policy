@@ -1,0 +1,46 @@
+name: GCP Policy Management
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    env:
+      TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+
+    steps:
+    # 1. Checkout the repository code
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    # 2. Authenticate to Google Cloud
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}  
+
+    # 3. Set up Terraform
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+ 
+    # 4. Initialize Terraform 
+    - name: Terraform Init
+      run: terraform init
+      working-directory: ./iac
+
+    # 5. Generate a Terraform plan
+    - name: Terraform Plan
+      id: plan
+      run: terraform plan -out=plan.tfplan
+      working-directory: ./iac
+
+    # 6. Apply the Terraform plan  
+    - name: Terraform Apply
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      run: terraform apply -auto-approve plan.tfplan
+      working-directory: ./iac
